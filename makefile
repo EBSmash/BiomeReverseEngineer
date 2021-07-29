@@ -1,5 +1,5 @@
 CC      = gcc
-override LDFLAGS = -lm -pthread
+override LDFLAGS = -lm -pthread -static
 override CFLAGS += -Wall -Wextra -Werror -fwrapv -O3 -march=native
 
 find_dragon: find_dragon.c
