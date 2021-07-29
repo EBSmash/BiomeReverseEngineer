@@ -15,9 +15,9 @@ const uint64_t seed = -4172144997902289642LL;
 // If you want to get up to N blocks out, the formula is:
 //    (2*N/windowSize)**2
 // where `**2` is the square (second power).
-const int numWindows = 10000;
-const int windowSize = 1024;
-const int marginSize = 128;
+const int numWindows = 1000*1000;
+const int windowSize = 512;
+const int marginSize = 64;
 const int areaSize = windowSize + marginSize;
 
 // The program is multithreaded, the number of threads
