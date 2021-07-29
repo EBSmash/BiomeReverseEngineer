@@ -427,7 +427,7 @@ void* thread_func(void* ptr) {
         windows_processed++;
 
         // Every now and then print progress information
-        if (windows_processed % 100 == 0) {
+        if (windows_processed % (100*numThreads) == 0) {
             const float blocks_processed =
                 (float)windows_processed * (float)windowSize * (float)windowSize;
             printf(
