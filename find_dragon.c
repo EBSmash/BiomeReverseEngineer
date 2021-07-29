@@ -11,16 +11,34 @@
 // dimensions windowSize by windowSize blocks in a spiral
 // pattern, starting at (0, 0).
 const uint64_t seed = -4172144997902289642LL;
+// How many windows should I use?
+// If you want to get up to N blocks out, the formula is:
+//    (2*N/windowSize)**2
+// where `**2` is the square (second power).
 const int numWindows = 10000;
 const int windowSize = 1024;
 const int marginSize = 128;
 const int areaSize = windowSize + marginSize;
 
-// The program is multithreaded, set this to the number
-// of physical (not virtual) cores installed in the system.
-// You can also try a few values to find the one that yields
-// highest blocks/second throughput.
-const int numThreads = 2;
+// The program is multithreaded, the number of threads
+// should be proportional to the number of cores.
+// But not necessarily equal! See the stats below for a
+// 96-core Amazon virtual machine.
+//
+// Some stats (as of 2021-07-29) for an Amazon EC2 instance
+// of the c5a.24xlarge type, with 96 vCPUs:
+//    numThreads==1   --->   150 Mblocks/sec
+//    numThreads==2   --->   300 Mblocks/sec
+//    numThreads==4   --->   580 Mblocks/sec
+//    numThreads==8   --->  1200 Mblocks/sec
+//    numThreads==16  --->  2200 Mblocks/sec
+//    numThreads==32  --->  3900 Mblocks/sec  <--- best
+//    numThreads==48  --->  3500 Mblocks/sec
+//    numThreads==64  --->  3200 Mblock/sec
+//    numThreads==80  --->  3100 Mblock/sec
+//    numThreads==96  --->  3100 Mblocks/sec
+//    numThreads==112 --->  3000 Mblocks/sec
+const int numThreads = 4;
 
 int accessBiome(const int* biomeIds, const int x, const int z) {
     return biomeIds[(z*areaSize) + x];
@@ -413,7 +431,7 @@ void* thread_func(void* ptr) {
             const float blocks_processed =
                 (float)windows_processed * (float)windowSize * (float)windowSize;
             printf(
-                "Thread %d has processed %" PRId64 " windows (%.1f billion blocks), "
+                "Thread %2d has processed %" PRId64 " windows (%.1f billion blocks), "
                 "and is currently at distance %" PRId64 " from origin\n",
                 thread_id, windows_processed,
                 blocks_processed * 1e-9, distance(x, z));
