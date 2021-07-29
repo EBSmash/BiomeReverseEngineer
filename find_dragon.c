@@ -8,36 +8,47 @@
 #include "cubiomes/util.h"
 
 // This program searches "windows", that is areas with
-// dimensions windowSize by windowSize blocks in a spiral
-// pattern, starting at (0, 0).
+// dimensions windowSize (plus marginSize) by windowSize (plus marginSize)
+// blocks in a spiral pattern, starting at (0, 0).
+
+// Seed of the map.
 const uint64_t seed = -4172144997902289642LL;
+
 // How many windows should I use?
 // If you want to get up to N blocks out, the formula is:
 //    (2*N/windowSize)**2
 // where `**2` is the square (second power).
 const int numWindows = 1000*1000;
+
+// windowSize has large impact on performance (blocks/second),
+// likely due to cache contention.
 const int windowSize = 512;
+
+// Margin must be larger than the size of your pattern.
 const int marginSize = 64;
+
 const int areaSize = windowSize + marginSize;
 
 // The program is multithreaded, the number of threads
 // should be proportional to the number of cores.
-// But not necessarily equal! See the stats below for a
-// 96-core Amazon virtual machine.
+// But not necessarily equal! See the stats below
+// for a 96-core AWS virtual machine.
 //
-// Some stats (as of 2021-07-29) for an Amazon EC2 instance
-// of the c5a.24xlarge type, with 96 vCPUs:
-//    numThreads==1   --->   150 Mblocks/sec
-//    numThreads==2   --->   300 Mblocks/sec
-//    numThreads==4   --->   580 Mblocks/sec
-//    numThreads==8   --->  1200 Mblocks/sec
-//    numThreads==16  --->  2200 Mblocks/sec
-//    numThreads==32  --->  3900 Mblocks/sec  <--- best
-//    numThreads==48  --->  3500 Mblocks/sec
-//    numThreads==64  --->  3200 Mblock/sec
-//    numThreads==80  --->  3100 Mblock/sec
-//    numThreads==96  --->  3100 Mblocks/sec
-//    numThreads==112 --->  3000 Mblocks/sec
+// Also, likely due to cache contention, the optimal number
+// of threads depends on the windowSize. One would have to
+// properly profile it with perf_events, look at cache
+// miss data.
+//
+// Some performance data (as of 2021-07-29, windowSize=512) for
+// an Amazon EC2 instance of the c5a.24xlarge type (with 96 vCPUs):
+//    numThreads==16  --->  2300 Mblocks/sec
+//    numThreads==32  --->  4870 Mblocks/sec
+//    numThreads==48  --->  7160 Mblocks/sec
+//    numThreads==64  --->  7360 Mblocks/sec
+//    numThreads==80  --->  8300 Mblocks/sec   <--- best
+//    numThreads==88  --->  8300 Mblocks/sec
+//    numThreads==96  --->  6860 Mblocks/sec
+//    numThreads==112 --->  6650 Mblocks/sec
 const int numThreads = 4;
 
 int accessBiome(const int* biomeIds, const int x, const int z) {
@@ -394,10 +405,11 @@ void* thread_func(void* ptr) {
     // Initialize a stack of biome layers.
     LayerStack g;
     setupGenerator(&g, MC_1_12);
+
     // Extract the desired layer.
     Layer *layer = &g.layers[L_VORONOI_1];
 
-    // Allocate a sufficient buffer for the biomes and for the image pixels.
+    // Allocate a sufficient buffer for the biomes.
     int *biomeIds = allocCache(layer, areaSize, areaSize);
 
     // Apply the seed only for the required layers
@@ -427,13 +439,13 @@ void* thread_func(void* ptr) {
         windows_processed++;
 
         // Every now and then print progress information
-        if (windows_processed % (100*numThreads) == 0) {
+        if (windows_processed % (500*numThreads) == 0) {
             const float blocks_processed =
                 (float)windows_processed * (float)windowSize * (float)windowSize;
             printf(
-                "Thread %2d has processed %" PRId64 " windows (%.1f billion blocks), "
-                "and is currently at distance %" PRId64 " from origin\n",
-                thread_id, windows_processed,
+                "Thread %2d/%d has processed %" PRId64 " windows (%.1f billion blocks), "
+                "and is currently at distance %" PRId64 " from 0,0\n",
+                thread_id, numThreads, windows_processed,
                 blocks_processed * 1e-9, distance(x, z));
         }
     }
