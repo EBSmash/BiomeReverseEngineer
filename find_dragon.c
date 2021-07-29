@@ -1,6 +1,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <inttypes.h>
 
 #include "spiral_iterator.h"
 #include "cubiomes/generator.h"
@@ -412,8 +413,8 @@ void* thread_func(void* ptr) {
             const float blocks_processed =
                 (float)windows_processed * (float)windowSize * (float)windowSize;
             printf(
-                "Thread %d has processed %lld windows (%.1f billion blocks), "
-                "and is currently at distance %lld from origin\n",
+                "Thread %d has processed %" PRId64 " windows (%.1f billion blocks), "
+                "and is currently at distance %" PRId64 " from origin\n",
                 thread_id, windows_processed,
                 blocks_processed * 1e-9, distance(x, z));
         }
@@ -471,7 +472,7 @@ int main()
     printf("\n");
     printf("All done.\n");
     printf(
-        "Processed %lld windows, %.1f billions of blocks\n",
+        "Processed %" PRId64 " windows, %.1f billions of blocks\n",
         windows_processed, blocks_processed * 1e-9f);
     printf("Processing time: %.1f sec.\n", time_seconds);
     printf("Processing speed: %.1f millions of blocks per second\n",
