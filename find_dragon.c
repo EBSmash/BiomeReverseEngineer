@@ -477,7 +477,7 @@ int main()
     printf("Processing time: %.1f sec.\n", time_seconds);
     printf("Processing speed: %.1f millions of blocks per second\n",
            blocks_per_sec * 1e-6);
-    printf("Found %llu matches\n", found_matches);
+    printf("Found %" PRId64 " matches\n", found_matches);
 
     return 0;
 }
