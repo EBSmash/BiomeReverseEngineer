@@ -8,7 +8,7 @@
 #include "cubiomes/util.h"
 
 // This program searches "windows", that is areas with
-// dimensions WINDOW_SIZE (plus MARGIN_SIZE) by WINDOW_SIZE (plus MARGIN_SIZE)
+// dimensions windowSize (plus marginSize) by windowSize (plus marginSize)
 // blocks in a spiral pattern, starting at (0, 0).
 
 // Seed of the map.
@@ -16,21 +16,18 @@ const uint64_t seed = -4172144997902289642LL;
 
 // How many windows should I use?
 // If you want to get up to N blocks out, the formula is:
-//    (2*N/WINDOW_SIZE)**2
+//    (2*N/windowSize)**2
 // where `**2` is the square (second power).
-#define NUM_WINDOWS (1000*1000)
+const int numWindows = 1000*1000;
 
-// WINDOW_SIZE has large impact on performance (blocks/second),
+// windowSize has large impact on performance (blocks/second),
 // likely due to cache contention.
-#define WINDOW_SIZE 512
+const int windowSize = 512;
 
 // Margin must be larger than the size of your pattern.
-#define MARGIN_SIZE 64
+const int marginSize = 64;
 
-// The terrain is scanned via "areas", which are windows plus margin,
-// since the pattern can occur at the boundary of two (or three, four)
-// windows
-#define AREA_SIZE (WINDOW_SIZE + MARGIN_SIZE)
+const int areaSize = windowSize + marginSize;
 
 // The program is multithreaded, the number of threads
 // should be proportional to the number of cores.
@@ -38,11 +35,11 @@ const uint64_t seed = -4172144997902289642LL;
 // for a 96-core AWS virtual machine.
 //
 // Also, likely due to cache contention, the optimal number
-// of threads depends on the WINDOW_SIZE. One would have to
+// of threads depends on the windowSize. One would have to
 // properly profile it with perf_events, look at cache
 // miss data.
 //
-// Some performance data (as of 2021-07-29, WINDOW_SIZE=512) for
+// Some performance data (as of 2021-07-29, windowSize=512) for
 // an Amazon EC2 instance of the c5a.24xlarge type (with 96 vCPUs):
 //    numThreads==16  --->  2300 Mblocks/sec
 //    numThreads==32  --->  4870 Mblocks/sec
@@ -55,7 +52,7 @@ const uint64_t seed = -4172144997902289642LL;
 const int numThreads = 4;
 
 int accessBiome(const int* biomeIds, const int x, const int z) {
-    return biomeIds[(z*AREA_SIZE) + x];
+    return biomeIds[(z*areaSize) + x];
 }
 
 int isDesert(int id) {
@@ -354,8 +351,8 @@ int has_dragon_pattern_at(const int* biomeIds, const int x, const int z) {
 }
 
 int has_dragon_pattern(const int* biomeIds, const int areaX, const int areaZ) {
-    for (int z = 0; z < AREA_SIZE - 4; ++z) {
-        for (int x = 0; x < AREA_SIZE - 12; ++x) {
+    for (int z = 0; z < areaSize - 4; ++z) {
+        for (int x = 0; x < areaSize - 12; ++x) {
             if (has_dragon_pattern_at(biomeIds, x, z)) {
                 // Found it!
                 printf("Found it - x:%d z:%d\n", areaX+x, areaZ+z);
@@ -369,8 +366,8 @@ int has_dragon_pattern(const int* biomeIds, const int areaX, const int areaZ) {
 
 int has_mesa(const int* biomeIds) {
     int mesa_found = 0;
-    for (int z = 0; z < AREA_SIZE; ++z) {
-        for (int x = 0; x < AREA_SIZE; ++x) {
+    for (int z = 0; z < areaSize; ++z) {
+        for (int x = 0; x < areaSize; ++x) {
             const int biome = accessBiome(biomeIds, x, z);
             if (isMesa(biome)) {
                 mesa_found = 1;
@@ -413,7 +410,7 @@ void* thread_func(void* ptr) {
     Layer *layer = &g.layers[L_VORONOI_1];
 
     // Allocate a sufficient buffer for the biomes.
-    int *biomeIds = allocCache(layer, AREA_SIZE, AREA_SIZE);
+    int *biomeIds = allocCache(layer, areaSize, areaSize);
 
     // Apply the seed only for the required layers
     setLayerSeed(layer, seed);
@@ -421,16 +418,16 @@ void* thread_func(void* ptr) {
     // Each thread processes their own modulus of the windows
     int64_t found_matches = 0;
     int64_t windows_processed = 0;
-    for (int64_t window_i = thread_id; window_i < NUM_WINDOWS; window_i += numThreads) {
+    for (int64_t window_i = thread_id; window_i < numWindows; window_i += numThreads) {
         // Compute the coordinates of the window.
         int64_t x = 0;
         int64_t z = 0;
         flat_to_xz_spiral(window_i, &x, &z);
-        x *= WINDOW_SIZE;
-        z *= WINDOW_SIZE;
+        x *= windowSize;
+        z *= windowSize;
 
         // Generate the area.
-        genArea(layer, biomeIds, x, z, AREA_SIZE, AREA_SIZE);
+        genArea(layer, biomeIds, x, z, areaSize, areaSize);
 
         // Does it have mesa?
         if (has_mesa(biomeIds)) {
@@ -444,7 +441,7 @@ void* thread_func(void* ptr) {
         // Every now and then print progress information
         if (windows_processed % (500*numThreads) == 0) {
             const float blocks_processed =
-                (float)windows_processed * (float)WINDOW_SIZE * (float)WINDOW_SIZE;
+                (float)windows_processed * (float)windowSize * (float)windowSize;
             printf(
                 "Thread %2d/%d has processed %" PRId64 " windows (%.1f billion blocks), "
                 "and is currently at distance %" PRId64 " from 0,0\n",
@@ -498,7 +495,7 @@ int main()
         found_matches += thread_datas[i].found_matches;
     }
     const float blocks_processed =
-        (float)windows_processed * (float)WINDOW_SIZE * (float)WINDOW_SIZE;
+        (float)windows_processed * (float)windowSize * (float)windowSize;
     const float blocks_per_sec = blocks_processed / time_seconds;
 
     // Print stats.
