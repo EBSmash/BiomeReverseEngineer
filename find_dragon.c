@@ -122,7 +122,7 @@ int has_dragon_pattern_at(const int* biomeIds, const int x, const int z) {
     if (!isMesa(accessBiome(biomeIds, x, z))){
         return 0;
     }
-    if (!isMesa(accessBiome(biomeIds, x + 1, z))){
+    if (!isDesert(accessBiome(biomeIds, x + 1, z))){
         return 0;
     }
     if (!isDesert(accessBiome(biomeIds, x + 2, z))){
