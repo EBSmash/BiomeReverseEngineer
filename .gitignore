@@ -1,2 +1,6 @@
 *.swp
 find_dragon
+
+.DS_Store
+image_gen.c
+single_image_gen.c
