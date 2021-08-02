@@ -9,6 +9,8 @@
 
 // This program searches "windows", that is areas with
 // dimensions windowSize (plus marginSize) by windowSize (plus marginSize)
+// dimensions WINDOW_SIZE (plus MARGIN_SIZE)
+// by WINDOW_SIZE (plus MARGIN_SIZE)
 // blocks in a spiral pattern, starting at (0, 0).
 
 // Seed of the map.
@@ -67,125 +69,9 @@ int isDesert(int id) {
 
 /*
    here's the pattern:
-   0     1       2       3       4       5     6     7       8      9        10    11    12
-   mesa, desert, desert, desert, desert, mesa, mesa, desert, desert
-   mesa, mesa,   desert, mesa,   mesa,   mesa, mesa, desert, desert
-   mesa, mesa,   mesa,   mesa,   mesa,   mesa, mesa, desert, desert, desert, mesa, mesa, desert
-
-
-   the widest part of the pattern has 13 blocks
-   the height of the pattern is 3 blocks
-*/
-int old_has_dragon_pattern_at(const int* biomeIds, const int x, const int z) {
-    // first row
-    if (!isMesa(accessBiome(biomeIds, x, z))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 1, z))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 2, z))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 3, z))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 4, z))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 5, z))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 6, z))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 7, z))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 8, z))){
-        return 0;
-    }
-
-    // second row
-    if (!isMesa(accessBiome(biomeIds, x, z + 1))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 1, z + 1))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 2, z + 1))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 3, z + 1))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 4, z + 1))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 5, z + 1))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 6, z + 1))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 7, z + 1))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 8, z + 1))){
-        return 0;
-    }
-
-    // third row
-    if (!isMesa(accessBiome(biomeIds, x, z + 2))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 1, z + 2))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 2, z + 2))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 3, z + 2))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 4, z + 2))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 5, z + 2))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 6, z + 2))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 7, z + 2))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 8, z + 2))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 9, z + 2))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 10, z + 2))){
-        return 0;
-    }
-    if (!isMesa(accessBiome(biomeIds, x + 11, z + 2))){
-        return 0;
-    }
-    if (!isDesert(accessBiome(biomeIds, x + 12, z + 2))){
-        return 0;
-    }
-
-
-    // Found it!
-    return 1;
-}
-
-/*
-   here's the pattern:
    0     1       2       3       4       5       6       7       8      9        10      11
    mesa, desert, desert, desert, desert, desert, desert, desert, desert, desert, desert, mesa 
-   mesa, mesa,   desert, desert, desert, mesa,   mesa,   mesa,   desert, desert, mesa,   mesa
+   mesa, desert, desert, desert, desert, mesa,   mesa,   mesa,   desert, desert, mesa,   mesa
    mesa, mesa,   desert, desert, mesa,   mesa,   mesa,   mesa,   desert, mesa,   mesa,   mesa
    mesa, mesa,   mesa,   mesa,   mesa,   mesa,   mesa,   mesa,   mesa,   mesa,   mesa,   mesa
 
