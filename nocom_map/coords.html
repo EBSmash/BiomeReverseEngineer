@@ -1,0 +1,155 @@
+<style>
+  #map_image {
+    margin-top: 90px;
+    margin-left: 30px;
+    border: 1px solid;
+  }
+  #coords {
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    width: 25em;
+    background-color: lightgray;
+    /* so that it is on top of all dots. */
+    z-index: 100000000000;
+  }
+  #coords_preview {
+    position: fixed;
+    left: 10px;
+    bottom: 10px;
+    width: 10em;
+    background-color: lightgray;
+  }
+  .mark {
+      position: absolute;
+      color: red;
+      font-size: x-small;
+  }
+</style>
+
+<img id="map_image" src="assets/8k_map.png"/>
+
+<div id="cross" style="position: absolute; top: -100px" class="mark">
+    X
+</div>
+
+<div id="coords">
+    <span id="coords_text">Click for coords</span>
+    <details>
+        <summary>Coords history</summary>
+        <textarea cols="40" rows="10" id="coords_history"></textarea>
+    </details>
+</div>
+
+<div id="coords_preview">
+    Hover over the pic
+</div>
+
+<br>
+
+<div>
+    <textarea cols="50" rows="20" placeholder="paste coords, one per line, format: X, Z" id="mark_text"></textarea>
+    <button type="button" style="vertical-align: top;" id="mark_button">Mark those coords</button>
+    <button type="button" style="vertical-align: top;" id="hide_button">Hide all marks</button>
+    <button type="button" style="vertical-align: top;" id="show_button">Show all marks</button>
+</div>
+
+<script>
+  image = document.getElementById("map_image");
+  cross = document.getElementById("cross");
+  coords_text = document.getElementById("coords_text");
+  coords_history = document.getElementById("coords_history");
+  coords_preview = document.getElementById("coords_preview");
+  createDot = function(x, y) {
+    // Create a new, permanent dot
+    var dot = document.createElement("div");
+    var dotText = document.createTextNode("•");
+    dot.appendChild(dotText);
+    document.body.append(dot);
+    dot.classList.add("mark");
+    dot.style.left = (x - (dot.offsetWidth / 2)) + "px";
+    dot.style.top = (y - (dot.offsetHeight / 2)) + "px";
+  };
+  imageClick = function(event) {
+    // Set the cross to point to the last click.
+    cross.style.left = (event.pageX - (cross.offsetWidth / 2)) + "px";
+    cross.style.top = (event.pageY - (cross.offsetHeight / 2)) + "px";
+
+    // Create the permanent dot.
+    createDot(event.pageX, event.pageY);
+
+    // Output the coords.
+    var rect = image.getBoundingClientRect();
+    var pixelX = event.clientX - rect.left;
+    var pixelY = event.clientY - rect.top;
+    var coordX = Math.round(-245760 + (4 * 16 * pixelX));
+    var coordZ = Math.round(-138240 + (4 * 16 * pixelY));
+    var netherCoordX = coordX / 8;
+    var netherCoordZ = coordZ / 8;
+    var text = "Coords: " + coordX + ", " + coordZ +
+        "; nether: " + netherCoordX + ", " + netherCoordZ;
+    coords_text.innerHTML = text;
+    // Also to the history <details> block.
+    coords_history.innerHTML += coordX + ", " + coordZ + "\n";
+  };
+
+  imageMouseOver = function(event) {
+    var rect = image.getBoundingClientRect();
+    var pixelX = event.clientX - rect.left;
+    var pixelY = event.clientY - rect.top;
+    var coordX = Math.round(-245760 + (4 * 16 * pixelX));
+    var coordZ = Math.round(-138240 + (4 * 16 * pixelY));
+    coords_preview.innerHTML = "X:" + coordX + ", Z: " + coordZ;
+  };
+  image.addEventListener('click', imageClick);
+  image.addEventListener('mousemove', imageMouseOver);
+  image.style.cursor = "crosshair";
+
+  mark_text = document.getElementById("mark_text");
+  mark_button = document.getElementById("mark_button");
+  mark_button.onclick = function(){
+      var text = mark_text.value;
+      var lines = text.match(/[^\r\n]+/g);
+      if (lines === null) {
+          lines = [];
+      }
+      lines.forEach(function(line){
+          var words = line.match(/[^ ,]+/g);
+          if (words.length != 2) {
+              alert("Invalid line: \"" + line + "\"");
+              return;
+          }
+          var coordX = parseInt(words[0]);
+          if (isNaN(coordX)) {
+              alert("Invalid coord: \"" + words[0] + "\"");
+              return;
+          }
+          var coordZ= parseInt(words[1]);
+          if (isNaN(coordZ)) {
+              alert("Invalid coord: \"" + words[1] + "\"");
+              return;
+          }
+
+          // The coords are fine, mark them.
+          var rect = image.getBoundingClientRect();
+          var pixelX = (coordX + 245760) / (4 * 16) + rect.left + window.scrollX;
+          var pixelZ = (coordZ + 138240) / (4 * 16) + rect.top + window.scrollY;
+          createDot(pixelX, pixelZ);
+      });
+  };
+
+  hide_button = document.getElementById("hide_button");
+  show_button = document.getElementById("show_button");
+  hide_button.onclick = function() {
+      var divsToHide = document.getElementsByClassName("mark");
+      for(var i = 0; i < divsToHide.length; i++) {
+          divsToHide[i].style.visibility = "hidden";
+      }
+  };
+  show_button.onclick = function() {
+      var divsToShow = document.getElementsByClassName("mark");
+      for(var i = 0; i < divsToShow.length; i++) {
+          divsToShow[i].style.visibility = "";
+      }
+  };
+</script>
