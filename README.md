@@ -1,3 +1,7 @@
+## What tf is ?
+   we saw these maps on rebanes map wall, we tried to use the relative biome compinations to find the coords it never worked, so im making it public if you own this base, msg me EBS#2574.
+
+
 ## How to clone
 
 Use `git clone --recurse-submodules`
