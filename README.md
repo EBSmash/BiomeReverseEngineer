@@ -1,6 +1,8 @@
 ## What tf is ?
    we saw these maps on rebanes map wall, we tried to use the relative biome compinations to find the coords it never worked, so im making it public if you own this base, msg me EBS#2574.
-
+## credit
+hause_was_here for making all of this... i cant code in c.
+everyone who contributed to Cubiomes.
 
 ## How to clone
 
